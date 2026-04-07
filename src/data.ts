@@ -1,3 +1,4 @@
+// Recipe data
 import { Recipe } from "./types";
 
 export const recipes: Recipe[] = [
