@@ -1,6 +1,6 @@
 # Recipe App
 
-A minimal full-stack recipe app built as a live coding interview exercise.
+A minimal frontend-only recipe app built as a live coding interview exercise.
 
 **Live demo:** `PLACEHOLDER_LIVE_DEMO_URL`
 **Source code:** https://github.com/rjbeery/recipe-app
@@ -10,71 +10,39 @@ A minimal full-stack recipe app built as a live coding interview exercise.
 
 ## What it is
 
-Two-page app: a recipe list and a recipe detail view. Express backend with in-memory data, React frontend with React Router.
+Two-page app: a recipe list and a recipe detail view. React + TypeScript + Vite, no backend. Recipe data lives in a local TypeScript module.
 
 ## Run locally
 
-**Terminal 1 — server** (runs on port 3001):
 ```bash
-cd server
-npm install
-npm run dev
-```
-
-**Terminal 2 — client** (runs on port 5173):
-```bash
-cd client
 npm install
 npm run dev
 ```
 
 Open http://localhost:5173
 
-## API
-
-| Method | Path | Returns |
-|--------|------|---------|
-| GET | /api/recipes | `RecipeSummary[]` |
-| GET | /api/recipes/:id | `Recipe` or 404 |
-
 ## Architecture
 
 ```
-interview-recipe-app/
-├── server/
-│   └── src/
-│       ├── index.ts     # Express setup
-│       ├── types.ts     # RecipeSummary, Recipe
-│       ├── data.ts      # In-memory recipe array
-│       ├── store.ts     # getAllRecipes, getRecipeById
-│       └── routes.ts    # Route handlers
-└── client/
-    └── src/
-        ├── main.tsx     # React entry
-        ├── App.tsx      # Router
-        ├── types.ts     # RecipeSummary, Recipe
-        ├── api.ts       # fetchRecipes, fetchRecipe
-        └── pages/
-            ├── RecipeList.tsx    # / — list view
-            └── RecipeDetail.tsx  # /recipes/:id — detail view
+src/
+├── main.tsx          # React entry
+├── App.tsx           # Router: / and /recipes/:id
+├── types.ts          # RecipeSummary, Recipe
+├── data.ts           # In-memory recipe array
+├── recipes.ts        # getAllRecipes(), getRecipeById()
+└── pages/
+    ├── RecipeList.tsx    # / — list all recipes
+    └── RecipeDetail.tsx  # /recipes/:id — recipe detail
 ```
 
-Data layer is isolated in `store.ts`. To swap in a real database, only `data.ts` and `store.ts` change.
+`data.ts` holds the raw array. `recipes.ts` is the only file that reads it — this is the seam where a real API call would go later. Pages import from `recipes.ts` directly; they never touch `data.ts`.
 
-## Deploying
+## Deploy (Netlify)
 
-### Backend → Render
 1. Push repo to GitHub
-2. Create a new **Web Service** on [render.com](https://render.com)
-3. Connect the GitHub repo, set root directory to `server`
-4. Build command: `npm install && npm run build`
-5. Start command: `npm start`
-
-### Frontend → Netlify
-1. Create a new site on [netlify.com](https://netlify.com)
-2. Connect the GitHub repo, set base directory to `client`
+2. New site → Import from Git → connect `rjbeery/recipe-app`
 3. Build command: `npm run build`
 4. Publish directory: `dist`
-5. Add environment variable: `VITE_API_URL=https://your-render-app.onrender.com/api`
+5. Deploy
 
-See `client/.env.example` for the required environment variable.
+No environment variables needed.
