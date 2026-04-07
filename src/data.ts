@@ -5,7 +5,7 @@ export const recipes: Recipe[] = [
     id: "chicken-stir-fry",
     title: "Chicken Stir-Fry",
     yield: 2,
-    image: "/images/chicken-stir-fry.svg",
+    image: "/images/chicken-stir-fry.png",
     ingredients: [
       "30g olive oil",
       "200g chicken breast",
@@ -20,7 +20,7 @@ export const recipes: Recipe[] = [
     id: "veggie-omelette",
     title: "Veggie Omelette",
     yield: 1,
-    image: "/images/veggie-omelette.svg",
+    image: "/images/veggie-omelette.png",
     ingredients: [
       "100g large eggs",
       "40g diced onion",
@@ -35,7 +35,7 @@ export const recipes: Recipe[] = [
     id: "overnight-oats",
     title: "Overnight Oats",
     yield: 4,
-    image: "/images/overnight-oats.svg",
+    image: "/images/overnight-oats.png",
     ingredients: [
       "160g rolled oats",
       "1000g almond milk",
