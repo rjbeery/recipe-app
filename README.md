@@ -3,7 +3,7 @@
 A minimal full-stack recipe app built as a live coding interview exercise.
 
 **Live demo:** `PLACEHOLDER_LIVE_DEMO_URL`
-**Source code:** `PLACEHOLDER_GITHUB_URL`
+**Source code:** https://github.com/rjbeery/recipe-app
 **Interview landing page:** https://thehereticalphysicist.com/direct-supply-interview
 
 ---
