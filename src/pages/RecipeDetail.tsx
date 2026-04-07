@@ -11,6 +11,11 @@ export default function RecipeDetail() {
     <div>
       <Link to="/">← Back</Link>
       <h1 style={{ marginTop: "1rem" }}>{recipe.title}</h1>
+      <img
+        src={recipe.image}
+        alt={recipe.title}
+        style={{ width: "100%", maxWidth: 320, borderRadius: 8, display: "block", margin: "1rem 0" }}
+      />
       <p>Serves: {recipe.yield}</p>
       <h2>Ingredients</h2>
       <ul>

@@ -9,9 +9,16 @@ export default function RecipeList() {
       <h1>Recipes</h1>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {recipes.map((r) => (
-          <li key={r.id} style={{ marginBottom: "0.75rem" }}>
-            <Link to={`/recipes/${r.id}`}>{r.title}</Link>
-            <span style={{ marginLeft: "0.5rem", color: "#666" }}>serves {r.yield}</span>
+          <li key={r.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+            <img
+              src={r.image}
+              alt={r.title}
+              style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+            />
+            <div>
+              <Link to={`/recipes/${r.id}`}>{r.title}</Link>
+              <div style={{ color: "#666", fontSize: "0.875rem" }}>serves {r.yield}</div>
+            </div>
           </li>
         ))}
       </ul>
