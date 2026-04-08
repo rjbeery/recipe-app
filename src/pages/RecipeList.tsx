@@ -6,7 +6,10 @@ export default function RecipeList() {
 
   return (
     <div>
-      <h1>Recipes</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <h1>Recipes</h1>
+        <Link to="/estimate" style={{ fontSize: "0.875rem" }}>Macro Estimator →</Link>
+      </div>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {recipes.map((r) => (
           <li key={r.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>

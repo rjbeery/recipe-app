@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RecipeList from "./pages/RecipeList";
 import RecipeDetail from "./pages/RecipeDetail";
+import Estimate from "./pages/Estimate";
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RecipeList />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
+          <Route path="/estimate" element={<Estimate />} />
         </Routes>
       </div>
     </BrowserRouter>
