@@ -8,7 +8,7 @@ export type MacroTotals = {
 };
 
 export type Confidence = "high" | "medium" | "low" | "unmatched";
-export type MatchSource = "manual" | "word-overlap";
+export type MatchSource = "manual" | "word-overlap" | "ai";
 
 // ── Structured ingredient ─────────────────────────────────────────────────────
 // rawText is always preserved for display; all other fields are derived.
