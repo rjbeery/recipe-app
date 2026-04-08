@@ -92,3 +92,8 @@ export const macroLookup: LookupEntry[] = [
   // Dairy alternatives
   { fdcId: 2257046, description: "Oat milk, unsweetened, plain",                                       per100g: { calories: 48,    protein: 0.8,   carbs: 5.1,   fat: 2.75   } },
 ];
+
+// O(1) lookup by FDC id — used by calculateMacros
+export const macroLookupById: Record<number, LookupEntry> = Object.fromEntries(
+  macroLookup.map((e) => [e.fdcId, e])
+);

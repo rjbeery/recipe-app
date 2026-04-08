@@ -1,7 +1,15 @@
-// Recipe data
-import { Recipe } from "./types";
+// Raw recipe data — ingredients stored as plain strings for human readability.
+// Structuring (parsing + matching) happens in recipes.ts at read time.
 
-export const recipes: Recipe[] = [
+type RawRecipe = {
+  id: string;
+  title: string;
+  yield: number;
+  image: string;
+  ingredients: string[];
+};
+
+export const recipeData: RawRecipe[] = [
   {
     id: "chicken-stir-fry",
     title: "Chicken Stir-Fry",

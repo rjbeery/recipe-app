@@ -31,7 +31,7 @@ export default function RecipeDetail() {
       <h2>Ingredients</h2>
       <ul>
         {recipe.ingredients.map((ing, i) => (
-          <li key={i}>{ing}</li>
+          <li key={i}>{ing.rawText}</li>
         ))}
       </ul>
 

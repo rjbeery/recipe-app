@@ -1,10 +1,16 @@
-import { recipes } from "./data";
+import { recipeData } from "./data";
 import { Recipe, RecipeSummary } from "./types";
+import { structureIngredient } from "./utils/structureIngredient";
 
 export function getAllRecipes(): RecipeSummary[] {
-  return recipes.map(({ ingredients: _, ...summary }) => summary);
+  return recipeData.map(({ ingredients: _, ...summary }) => summary);
 }
 
 export function getRecipeById(id: string): Recipe | undefined {
-  return recipes.find((r) => r.id === id);
+  const raw = recipeData.find((r) => r.id === id);
+  if (!raw) return undefined;
+  return {
+    ...raw,
+    ingredients: raw.ingredients.map(structureIngredient),
+  };
 }
