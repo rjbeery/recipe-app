@@ -4,7 +4,6 @@ A minimal frontend-only recipe app built as a live coding interview exercise.
 
 **Live demo:** https://recipe-app.thehereticalphysicist.com/
 **Source code:** https://github.com/rjbeery/recipe-app
-**Interview landing page:** https://thehereticalphysicist.com/direct-supply-interview
 
 ---
 
