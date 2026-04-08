@@ -1,4 +1,5 @@
-import { memoryBudget, BUDGET_LIMIT } from "./_budget";
+import { getBudgetStore, BUDGET_LIMIT } from "./_budget";
+import { getDb } from "./_db";
 
 type Candidate = { fdcId: number; description: string; score: number };
 
@@ -6,6 +7,7 @@ type RequestBody = {
   phrase: string;
   grams: number;
   candidates: Candidate[];
+  recipeId?: string; // optional — used for AI usage logging
 };
 
 type AiChoice = {
@@ -23,6 +25,31 @@ function estimateCost(inputTokens: number, outputTokens: number): number {
   return (inputTokens * INPUT_COST_PER_M + outputTokens * OUTPUT_COST_PER_M) / 1_000_000;
 }
 
+async function logUsage(params: {
+  recipeId: string | undefined;
+  phrase: string;
+  matchedFdcId: number | null;
+  confidence: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+}): Promise<void> {
+  try {
+    await getDb().from("ai_usage_log").insert({
+      recipe_id: params.recipeId ?? null,
+      ingredient_raw_text: null, // phrase is available; raw not sent to server
+      phrase: params.phrase,
+      matched_fdc_id: params.matchedFdcId,
+      confidence: params.confidence,
+      input_tokens: params.inputTokens,
+      output_tokens: params.outputTokens,
+      cost_usd: params.costUsd,
+    });
+  } catch {
+    // Logging failure should never surface to the user
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -33,13 +60,15 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: "API key not configured" });
   }
 
-  const { phrase, grams, candidates } = req.body as RequestBody;
+  const { phrase, grams, candidates, recipeId } = req.body as RequestBody;
   if (!phrase || !Array.isArray(candidates)) {
     return res.status(400).json({ error: "Missing phrase or candidates" });
   }
 
+  const budget = getBudgetStore();
+
   // Check budget before calling AI
-  const spent = await memoryBudget.getSpent();
+  const spent = await budget.getSpent();
   if (spent >= BUDGET_LIMIT) {
     return res.status(200).json({
       matchedFdcId: null,
@@ -98,10 +127,12 @@ export default async function handler(req: any, res: any) {
   const aiData = await aiResponse.json();
   const content: string = aiData.content?.[0]?.text ?? "";
   const usage = aiData.usage ?? {};
-  const cost = estimateCost(usage.input_tokens ?? 0, usage.output_tokens ?? 0);
+  const inputTokens = usage.input_tokens ?? 0;
+  const outputTokens = usage.output_tokens ?? 0;
+  const cost = estimateCost(inputTokens, outputTokens);
 
-  await memoryBudget.addSpent(cost);
-  const newSpent = await memoryBudget.getSpent();
+  // Atomically update budget (returns new total)
+  const newSpent = await budget.addSpent(cost);
 
   let choice: AiChoice;
   try {
@@ -123,6 +154,17 @@ export default async function handler(req: any, res: any) {
     choice.confidence = "unmatched";
     choice.reason += " (fdcId not in candidate list — rejected)";
   }
+
+  // Log the AI call (fire-and-forget — don't block the response)
+  logUsage({
+    recipeId,
+    phrase,
+    matchedFdcId: choice.fdcId,
+    confidence: choice.confidence,
+    inputTokens,
+    outputTokens,
+    costUsd: cost,
+  });
 
   return res.status(200).json({
     matchedFdcId: choice.fdcId,

@@ -15,7 +15,10 @@ export type AiMatchResponse = {
 
 export type AiMatchResult = AiMatchResponse & { raw: string };
 
-export async function aiMatchIngredient(raw: string): Promise<AiMatchResult | null> {
+export async function aiMatchIngredient(
+  raw: string,
+  recipeId?: string
+): Promise<AiMatchResult | null> {
   const parsed = parseIngredient(raw);
   if (!parsed || parsed.grams == null) return null;
 
@@ -28,7 +31,12 @@ export async function aiMatchIngredient(raw: string): Promise<AiMatchResult | nu
   const res = await fetch("/api/match-ingredient", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phrase: parsed.phrase, grams: parsed.grams, candidates }),
+    body: JSON.stringify({
+      phrase: parsed.phrase,
+      grams: parsed.grams,
+      candidates,
+      recipeId,
+    }),
   });
 
   if (!res.ok) throw new Error(`AI match failed: ${res.status}`);
@@ -37,8 +45,13 @@ export async function aiMatchIngredient(raw: string): Promise<AiMatchResult | nu
 }
 
 // Runs aiMatchIngredient for all raws in parallel; silently skips failures.
-export async function aiMatchAll(raws: string[]): Promise<AiMatchResult[]> {
-  const settled = await Promise.allSettled(raws.map(aiMatchIngredient));
+export async function aiMatchAll(
+  raws: string[],
+  recipeId?: string
+): Promise<AiMatchResult[]> {
+  const settled = await Promise.allSettled(
+    raws.map((raw) => aiMatchIngredient(raw, recipeId))
+  );
   return settled
     .map((r) => (r.status === "fulfilled" ? r.value : null))
     .filter((r): r is AiMatchResult => r !== null);

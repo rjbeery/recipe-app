@@ -4,6 +4,7 @@ import { getRecipeById } from "../recipes";
 import { calculateMacros } from "../utils/calculateMacros";
 import { StructuredIngredient, Confidence } from "../types";
 import { aiMatchAll, AiMatchResult } from "../utils/aiMatch";
+import { fetchPersistedIngredients, saveIngredients } from "../utils/recipeApi";
 import BudgetDisplay from "../components/BudgetDisplay";
 
 const CONFIDENCE_COLOR: Record<Confidence, string> = {
@@ -24,8 +25,8 @@ export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
   const recipe = getRecipeById(id!);
 
-  // Local state for ingredients — starts from the synchronous local match,
-  // updated in-place when AI results arrive.
+  // Ingredient state — starts from synchronous local pipeline,
+  // upgraded with persisted DB data on mount (if available).
   const [ingredients, setIngredients] = useState<StructuredIngredient[]>(
     recipe?.ingredients ?? []
   );
@@ -34,12 +35,22 @@ export default function RecipeDetail() {
   const [budgetLimit, setBudgetLimit] = useState(10);
   const [showBudget, setShowBudget] = useState(false);
 
-  // Reset ingredient state when navigating between recipes.
   useEffect(() => {
-    setIngredients(recipe?.ingredients ?? []);
+    // Reset to local pipeline immediately (instant, no flash)
+    const local = recipe?.ingredients ?? [];
+    setIngredients(local);
     setAiLoading(false);
     setShowBudget(false);
-  }, [id]); // id change → recipe changes synchronously; recipe is not a stable dep
+
+    // Overlay with persisted data if the recipe has been AI-matched before
+    fetchPersistedIngredients(id!)
+      .then((persisted) => {
+        if (persisted && persisted.length > 0) setIngredients(persisted);
+      })
+      .catch(() => {
+        // DB unavailable or not configured — local state is fine
+      });
+  }, [id]); // id change causes recipe to change synchronously
 
   if (!recipe) return <p>Recipe not found.</p>;
 
@@ -47,9 +58,8 @@ export default function RecipeDetail() {
     setAiLoading(true);
     try {
       const raws = ingredients.map((ing) => ing.rawText);
-      const aiResults = await aiMatchAll(raws);
+      const aiResults = await aiMatchAll(raws, id);
 
-      // Index by raw text for O(1) lookup
       const byRaw: Record<string, AiMatchResult> = {};
       for (const result of aiResults) {
         byRaw[result.raw] = result;
@@ -58,20 +68,23 @@ export default function RecipeDetail() {
         setShowBudget(true);
       }
 
-      // Merge AI results into ingredient state; skip budget-exhausted responses
-      setIngredients((prev) =>
-        prev.map((ing) => {
-          const ai = byRaw[ing.rawText];
-          if (!ai || ai.budgetExhausted) return ing;
-          return {
-            ...ing,
-            matchedFdcId: ai.matchedFdcId,
-            matchedDescription: ai.matchedDescription,
-            confidence: ai.confidence,
-            matchSource: "ai",
-          };
-        })
-      );
+      // Compute updated ingredients once — used for both state and DB save
+      const updated = ingredients.map((ing) => {
+        const ai = byRaw[ing.rawText];
+        if (!ai || ai.budgetExhausted) return ing;
+        return {
+          ...ing,
+          matchedFdcId: ai.matchedFdcId,
+          matchedDescription: ai.matchedDescription,
+          confidence: ai.confidence,
+          matchSource: "ai" as const,
+        };
+      });
+
+      setIngredients(updated);
+
+      // Persist to DB (fire-and-forget — don't block the UI)
+      saveIngredients(recipe, updated).catch(console.error);
     } finally {
       setAiLoading(false);
     }
