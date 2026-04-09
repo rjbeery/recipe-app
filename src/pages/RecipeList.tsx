@@ -24,7 +24,7 @@ export default function RecipeList() {
   // user-created recipes appear, deleted recipes stay gone.
   useEffect(() => {
     fetchRecipes()
-      .then((list) => { if (list !== null) setRecipes(list); })
+      .then((list) => { if (list && list.length > 0) setRecipes(list); })
       .catch(() => {}); // DB unavailable — local static list is the fallback
   }, []);
 
