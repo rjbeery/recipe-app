@@ -80,13 +80,11 @@ export default function RecipeList() {
       <ul style={{ listStyle: "none", padding: 0 }}>
         {recipes.map((r) => (
           <li key={r.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-            {r.image && (
-              <img
-                src={r.image}
-                alt={r.title}
-                style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
-              />
-            )}
+            <img
+              src={r.image || "/images/placeholder.svg"}
+              alt={r.title}
+              style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+            />
             <div style={{ flex: 1 }}>
               <Link to={`/recipes/${r.id}`}>{r.title}</Link>
               <div style={{ color: "#666", fontSize: "0.875rem" }}>serves {r.yield}</div>

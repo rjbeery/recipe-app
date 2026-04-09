@@ -160,13 +160,11 @@ export default function RecipeDetail() {
   return (
     <div>
       <h1>{recipe.title}</h1>
-      {recipe.image && (
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          style={{ width: "100%", maxWidth: 320, borderRadius: 8, display: "block", margin: "1rem 0" }}
-        />
-      )}
+      <img
+        src={recipe.image || "/images/placeholder.svg"}
+        alt={recipe.title}
+        style={{ width: "100%", maxWidth: 320, borderRadius: 8, display: "block", margin: "1rem 0" }}
+      />
       <p style={{ margin: "0.25rem 0 0.75rem" }}>Serves: {recipe.yield}</p>
 
       <div style={{ marginBottom: "1rem" }}>

@@ -5,7 +5,7 @@ type Props = {
 
 export default function BudgetDisplay({ spent, limit }: Props) {
   if (spent === null) {
-    return <div style={{ fontSize: "0.72rem", color: "#9ca3af" }}>AI budget: –</div>;
+    return <div style={{ fontSize: "0.72rem", color: "#9ca3af" }}>AI Budget: unavailable</div>;
   }
 
   const pct = Math.min((spent / limit) * 100, 100);
@@ -14,7 +14,7 @@ export default function BudgetDisplay({ spent, limit }: Props) {
   return (
     <div style={{ fontSize: "0.72rem", color: "#555", minWidth: 120 }}>
       <div style={{ fontWeight: 600, color }}>
-        AI budget: ${spent.toFixed(4)} / ${limit.toFixed(0)}
+        AI Budget: ${spent.toFixed(2)} / ${limit.toFixed(2)} used
       </div>
       <div style={{ background: "#e5e7eb", borderRadius: 4, height: 3, marginTop: 2 }}>
         <div

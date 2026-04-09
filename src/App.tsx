@@ -11,7 +11,7 @@ export type AppShellContext = {
 function AppShell() {
   const location = useLocation();
   const isDetail = location.pathname.startsWith("/recipes/");
-  // null = not yet fetched or fetch failed (shown as "–" in display)
+  // null = not yet fetched or fetch failed (shown as "unavailable" in display)
   const [budgetSpent, setBudgetSpent] = useState<number | null>(null);
   const budgetLimit = 10;
 
