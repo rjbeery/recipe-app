@@ -40,17 +40,16 @@ export default function RecipeList() {
     setRecipes((prev) => prev.filter((r) => r.id !== id));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function createRecipe(recipeTitle: string, recipeYield: number, recipeIngredientText: string) {
     setSaveError(null);
-    const id = `${slugify(title)}-${Date.now()}`;
-    const ingredients = ingredientText
+    const id = `${slugify(recipeTitle)}-${Date.now()}`;
+    const ingredients = recipeIngredientText
       .split("\n")
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
       .map(structureIngredient);
 
-    const recipe = { id, title, yield: yieldServings, image: "", ingredients };
+    const recipe = { id, title: recipeTitle, yield: recipeYield, image: "", ingredients };
 
     // Register in local store immediately so RecipeDetail can resolve it
     addRecipe(recipe);
@@ -66,6 +65,19 @@ export default function RecipeList() {
     }
 
     navigate(`/recipes/${id}`);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await createRecipe(title, yieldServings, ingredientText);
+  }
+
+  async function handleLoadSample() {
+    await createRecipe(
+      "Simple Chicken Rice Bowl",
+      2,
+      "300g Chicken, broilers or fryers, breast, meat only, cooked, roasted\n200g Rice, white, long-grain, raw, enriched\n150g Broccoli, raw\n20g Olive oil"
+    );
   }
 
   return (
@@ -100,13 +112,26 @@ export default function RecipeList() {
       </ul>
 
       {!showForm ? (
-        <button
-          onClick={() => setShowForm(true)}
-          style={{ fontSize: "0.85rem", padding: "0.3rem 0.8rem", cursor: "pointer" }}
-        >
-          + Add recipe
-        </button>
-      ) : (
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setShowForm(true)}
+            style={{ fontSize: "0.85rem", padding: "0.3rem 0.8rem", cursor: "pointer" }}
+          >
+            + Add recipe
+          </button>
+          <button
+            onClick={handleLoadSample}
+            disabled={isSaving}
+            style={{ fontSize: "0.85rem", padding: "0.3rem 0.8rem", cursor: isSaving ? "default" : "pointer", opacity: isSaving ? 0.6 : 1, color: "#6b7280", background: "none", border: "1px solid #d1d5db", borderRadius: 4 }}
+          >
+            {isSaving ? "Loading…" : "Load sample recipe"}
+          </button>
+        </div>
+      )}
+      {!showForm && saveError && (
+        <p style={{ color: "#92400e", fontSize: "0.78rem", margin: "0.4rem 0 0" }}>{saveError}</p>
+      )}
+      {showForm && (
         <form onSubmit={handleSubmit} style={{ marginTop: "0.5rem", padding: "0.75rem", background: "#f9fafb", borderRadius: 6 }}>
           <div style={{ marginBottom: "0.5rem" }}>
             <label style={{ display: "block", fontSize: "0.82rem", marginBottom: "0.2rem" }}>Title</label>

@@ -3,17 +3,10 @@ import { useParams, useOutletContext } from "react-router-dom";
 import { getRecipeById, addRecipe } from "../recipes";
 import { calculateMacros } from "../utils/calculateMacros";
 import { macroLookupById } from "../utils/macroLookup";
-import { StructuredIngredient, Confidence, MacroTotals, Recipe } from "../types";
+import { StructuredIngredient, MacroTotals, Recipe } from "../types";
 import { aiMatchAll, AiMatchResult } from "../utils/aiMatch";
 import { fetchPersistedIngredients, fetchRecipeById, saveIngredients } from "../utils/recipeApi";
 import type { AppShellContext } from "../App";
-
-const CONFIDENCE_COLOR: Record<Confidence, string> = {
-  high:      "#166534",
-  medium:    "#92400e",
-  low:       "#991b1b",
-  unmatched: "#6b7280",
-};
 
 function r(n: number) { return Math.round(n); }
 
@@ -25,17 +18,6 @@ function ingredientMacros(ing: StructuredIngredient): MacroTotals | null {
   return { calories: entry.per100g.calories * f, protein: entry.per100g.protein * f, carbs: entry.per100g.carbs * f, fat: entry.per100g.fat * f };
 }
 
-const MATCH_EXPLANATION: Record<string, string> = {
-  manual:        "Exact match from curated ingredient map",
-  "word-overlap": "Matched based on keyword similarity",
-  ai:            "AI-assisted match",
-};
-
-const SOURCE_LABEL: Record<string, string> = {
-  manual:        "Curated",
-  "word-overlap": "Heuristic",
-  ai:            "AI assisted",
-};
 
 export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -207,52 +189,23 @@ export default function RecipeDetail() {
       )}
 
       <h2 style={{ margin: "0 0 0.5rem" }}>Ingredients</h2>
-      <div style={{ margin: "0 0 0.75rem", padding: "0.6rem 0.75rem", background: "#f9fafb", borderRadius: 6, fontSize: "0.78rem", color: "#6b7280" }}>
-        <strong style={{ display: "block", marginBottom: "0.2rem", color: "#374151" }}>How matching works</strong>
-        Ingredients keep their original recipe wording. The system first tries curated matches, then heuristic search, and uses AI only as a constrained fallback against USDA candidates.
-      </div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {ingredients.map((ing, i) => {
           const macros = estimateDone ? ingredientMacros(ing) : null;
           const matched = estimateDone && ing.matchedDescription && ing.confidence !== "unmatched";
           return (
             <li key={i} style={{ marginBottom: "0.6rem" }}>
-              {/* 1. Original ingredient text — always visible */}
               <span style={{ fontSize: "0.9rem" }}>{ing.rawText}</span>
-
-              {/* Match details only appear after estimation runs */}
-              {estimateDone && (matched ? (
+              {matched && (
                 <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "0.1rem" }}>
-                  {/* 2. Matched USDA description */}
                   → {ing.matchedDescription}
-                  {/* 3. Source label */}
-                  {ing.matchSource && (
-                    <span style={{ marginLeft: "0.4rem", color: "#9ca3af", fontSize: "0.72rem" }}>
-                      {SOURCE_LABEL[ing.matchSource]}
-                    </span>
-                  )}
-                  {/* 4. Confidence */}
-                  <span style={{ marginLeft: "0.4rem", color: CONFIDENCE_COLOR[ing.confidence!], fontWeight: 500 }}>
-                    [{ing.confidence}]
-                  </span>
-                  {/* 5. Explanation */}
-                  {ing.matchSource && (
-                    <div style={{ color: "#9ca3af", fontStyle: "italic", marginTop: "0.1rem" }}>
-                      {MATCH_EXPLANATION[ing.matchSource]}
-                    </div>
-                  )}
-                  {/* 6. Per-ingredient macros */}
                   {macros && (
                     <div style={{ color: "#555", marginTop: "0.1rem" }}>
                       {r(macros.calories)} kcal · {r(macros.protein)}g protein · {r(macros.carbs)}g carbs · {r(macros.fat)}g fat
                     </div>
                   )}
                 </div>
-              ) : (
-                <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.1rem" }}>
-                  {ing.phrase ? `no match — "${ing.phrase}"` : "could not parse"}
-                </div>
-              ))}
+              )}
             </li>
           );
         })}
