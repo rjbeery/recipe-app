@@ -111,7 +111,7 @@ export default function RecipeList() {
         ))}
       </ul>
 
-      {!showForm ? (
+      {!showForm && (
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
           <button
             onClick={() => setShowForm(true)}
