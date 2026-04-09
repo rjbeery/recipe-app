@@ -1,5 +1,5 @@
-import { getBudgetStore, BUDGET_LIMIT } from "./_budget";
-import { getDb } from "./_db";
+import { getBudgetStore, BUDGET_LIMIT } from "./_budget.js";
+import { getDb } from "./_db.js";
 
 type Candidate = { fdcId: number; description: string; score: number };
 

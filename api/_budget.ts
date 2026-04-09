@@ -1,4 +1,4 @@
-import { getDb } from "./_db";
+import { getDb } from "./_db.js";
 
 export const BUDGET_LIMIT = 10; // USD
 

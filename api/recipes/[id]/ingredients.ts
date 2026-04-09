@@ -1,7 +1,7 @@
 // GET  /api/recipes/:id/ingredients — returns persisted structured ingredients
 // PUT  /api/recipes/:id/ingredients — upserts recipe + all ingredient rows
 
-import { getDb } from "../../_db";
+import { getDb } from "../../_db.js";
 
 type IngredientRow = {
   recipe_id: string;

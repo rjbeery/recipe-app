@@ -3,7 +3,7 @@
 // Seeds the recipes and recipe_ingredients tables from the canonical raw data.
 // Match fields start null; they are populated by the local pipeline or AI on first use.
 
-import { getDb } from "./_db";
+import { getDb } from "./_db.js";
 
 const RAW_RECIPES = [
   {

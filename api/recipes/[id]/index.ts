@@ -1,6 +1,6 @@
 // GET    /api/recipes/:id — returns recipe metadata
 // DELETE /api/recipes/:id — removes the recipe and cascades to its ingredient rows
-import { getDb } from "../../_db";
+import { getDb } from "../../_db.js";
 
 export default async function handler(req: any, res: any) {
   const recipeId: string = req.query.id;

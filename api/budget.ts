@@ -1,5 +1,5 @@
 // GET /api/budget — returns current AI spend and limit
-import { getBudgetStore, BUDGET_LIMIT } from "./_budget";
+import { getBudgetStore, BUDGET_LIMIT } from "./_budget.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
