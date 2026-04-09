@@ -11,9 +11,8 @@ type RequestBody = {
 };
 
 type AiChoice = {
-  fdcId: number | null;
-  description: string | null;
-  confidence: "high" | "medium" | "low" | "unmatched";
+  fdcId: number;
+  confidence: "high" | "medium" | "low";
   reason: string;
 };
 
@@ -82,21 +81,33 @@ export default async function handler(req: any, res: any) {
     });
   }
 
+  // No candidates → skip AI entirely; nothing to choose from
+  if (candidates.length === 0) {
+    return res.status(200).json({
+      matchedFdcId: null,
+      matchedDescription: null,
+      confidence: "unmatched",
+      reason: "No candidates found in local database.",
+      estimatedCost: 0,
+      budgetUsed: spent,
+      budgetLimit: BUDGET_LIMIT,
+      budgetExhausted: false,
+    });
+  }
+
   const candidateList = candidates
-    .map((c, i) => `${i + 1}. fdcId=${c.fdcId} "${c.description}" (score=${c.score.toFixed(2)})`)
+    .map((c, i) => `${i + 1}. fdcId=${c.fdcId} "${c.description}"`)
     .join("\n");
 
-  const userMessage =
-    candidates.length === 0
-      ? `Ingredient: "${phrase}" (${grams}g)\nNo local candidates found. Return null for fdcId.`
-      : `Ingredient: "${phrase}" (${grams}g)\nLocal USDA candidates:\n${candidateList}`;
+  const userMessage = `Ingredient: "${phrase}" (${grams}g)\nUSDA candidates (choose exactly one):\n${candidateList}`;
 
   const system = [
     "You are a nutrition database assistant.",
-    "Given an ingredient phrase and optional USDA food database candidates, select the single best match.",
-    "Only choose from the provided candidate list. If none fit, use null.",
+    "You will be given an ingredient phrase and a numbered list of USDA food candidates.",
+    "You MUST select exactly one candidate from the list.",
+    "You MUST NOT invent or suggest any food not in the list.",
     "Respond with ONLY valid JSON — no markdown, no text outside the JSON object:",
-    `{"fdcId": <number|null>, "description": <string|null>, "confidence": <"high"|"medium"|"low"|"unmatched">, "reason": "<one sentence>"}`,
+    `{"fdcId": <number>, "confidence": <"high"|"medium"|"low">, "reason": "<one sentence>"}`,
   ].join(" ");
 
   let aiResponse: Response;
@@ -134,26 +145,25 @@ export default async function handler(req: any, res: any) {
   // Atomically update budget (returns new total)
   const newSpent = await budget.addSpent(cost);
 
+  const validIds = new Set(candidates.map((c) => c.fdcId));
+  const best = candidates[0]; // highest-score heuristic fallback
+
   let choice: AiChoice;
   try {
-    choice = JSON.parse(content);
+    const parsed = JSON.parse(content);
+    if (!validIds.has(parsed.fdcId)) throw new Error("fdcId not in candidate list");
+    choice = parsed as AiChoice;
   } catch {
+    // Fallback: top heuristic candidate at low confidence
     choice = {
-      fdcId: null,
-      description: null,
-      confidence: "unmatched",
-      reason: "AI returned unparseable response.",
+      fdcId: best.fdcId,
+      confidence: "low",
+      reason: "AI response invalid; fell back to top heuristic match.",
     };
   }
 
-  // Safety: reject any fdcId not in the candidate list (hallucination guard)
-  const validIds = new Set(candidates.map((c) => c.fdcId));
-  if (choice.fdcId !== null && !validIds.has(choice.fdcId)) {
-    choice.fdcId = null;
-    choice.description = null;
-    choice.confidence = "unmatched";
-    choice.reason += " (fdcId not in candidate list — rejected)";
-  }
+  // Look up description from candidates — never trust AI-supplied text
+  const matchedCandidate = candidates.find((c) => c.fdcId === choice.fdcId)!;
 
   // Log the AI call (fire-and-forget — don't block the response)
   logUsage({
@@ -168,7 +178,7 @@ export default async function handler(req: any, res: any) {
 
   return res.status(200).json({
     matchedFdcId: choice.fdcId,
-    matchedDescription: choice.description,
+    matchedDescription: matchedCandidate.description,
     confidence: choice.confidence,
     reason: choice.reason,
     estimatedCost: cost,

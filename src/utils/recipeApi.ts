@@ -1,4 +1,4 @@
-import { StructuredIngredient, Confidence, MatchSource, Recipe } from "../types";
+import { StructuredIngredient, Confidence, MatchSource, Recipe, RecipeSummary } from "../types";
 
 // Maps the camelCase API response back to a StructuredIngredient.
 // Handles the NUMERIC → string coercion Supabase applies to decimal columns.
@@ -18,6 +18,28 @@ function mapIngredient(row: any): StructuredIngredient {
 }
 
 /**
+ * Fetches all recipes from the database.
+ * Returns null if the server is unavailable.
+ */
+export async function fetchRecipes(): Promise<RecipeSummary[] | null> {
+  const res = await fetch("/api/recipes");
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
+ * Fetches a single recipe's metadata from the database.
+ * Returns null if not found, throws on other errors.
+ */
+export async function fetchRecipeById(recipeId: string): Promise<Recipe | null> {
+  const res = await fetch(`/api/recipes/${recipeId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Recipe fetch failed: ${res.status}`);
+  const data = await res.json();
+  return { ...data, ingredients: [] };
+}
+
+/**
  * Fetches persisted ingredient matches for a recipe.
  * Returns null if the recipe has no persisted data yet (first visit).
  */
@@ -29,6 +51,14 @@ export async function fetchPersistedIngredients(
   if (!res.ok) throw new Error(`Ingredient fetch failed: ${res.status}`);
   const data: any[] = await res.json();
   return data.map(mapIngredient);
+}
+
+/**
+ * Deletes a recipe and its ingredient rows from the backend.
+ */
+export async function deleteRecipe(recipeId: string): Promise<void> {
+  const res = await fetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Recipe delete failed: ${res.status}`);
 }
 
 /**
